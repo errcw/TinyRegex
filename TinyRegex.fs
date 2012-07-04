@@ -10,14 +10,17 @@ module TinyRegex =
         | Seq of Regex * Regex
         | Rep of Regex
 
-    // Consumes the given token and returns the rest
-    let (|TK|_|) (token : char) (tokens : char list) = function
+    let (|TK|_|) token tokens =
+        match tokens with
         | t :: rest when t = token -> Some(rest)
         | _ -> None
 
-    // Consumes any character and returns the character and the rest
-    let (|CH|_|) tokens = function
-        | t :: rest -> Some(t, rest)
+    let (|CH|_|) tokens =
+        let special = function
+            | '(' | ')' | '*' | '|' -> true
+            | _ -> false
+        match tokens with
+        | t :: rest when not(special t) -> Some(t, rest)
         | _ -> None
 
     // A regular expression is:
@@ -35,7 +38,7 @@ module TinyRegex =
 
     and (|Term|_|) t =
         match t with
-        | Factor(e1, Factor(e2, rest)) -> Some(Seq(e1, e2), rest)
+        | Factor(e1, Term(e2, rest)) -> Some(Seq(e1, e2), rest)
         | Factor(e, rest) -> Some(e, rest)
         | _ -> None
 
@@ -51,8 +54,7 @@ module TinyRegex =
         | CH(ch, rest) -> Some(Char ch, rest)
         | _ -> None
 
-
-    // Testing
-    match Seq.toList "(abc" with
-    | Expr(e, []) -> printfn "%A" e
-    | _ -> printf "No match"
+    let parseRegex regex =
+        match Seq.toList regex with
+        | Expr(e, []) -> e
+        | _ -> failwith "Not a valid regex"
