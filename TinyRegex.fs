@@ -1,6 +1,7 @@
 ﻿#light
 
 // TinyRegex: A tiny regular matcher using derivatives in F#
+// Based on http://matt.might.net/articles/implementation-of-regular-expression-matching-in-scheme-with-derivatives/
 module TinyRegex
 
 type Regex =
@@ -79,7 +80,7 @@ let rep e =
     | Empty -> Empty
     | _ -> Rep e
 
-// Returns Empty if the given expression accepts the empty string, otherwise Null
+// Returns Empty if the regex accepts the empty string, otherwise Null
 let rec empty = function
     | Empty -> Empty
     | Null -> Null
@@ -88,7 +89,9 @@ let rec empty = function
     | Seq(e1, e2) -> seq (empty e1) (empty e2)
     | Rep e -> Empty
 
-// Returns the derivative of an expression with respect to a character
+// Returns a new expression that matches what the original expression matches
+// after having matched the given character. For example, the derivative of
+// (ab|ac)* with respect to a is (b|c)(ab|ac)*.
 let rec derivative re c =
     match re with
     | Empty -> Null
